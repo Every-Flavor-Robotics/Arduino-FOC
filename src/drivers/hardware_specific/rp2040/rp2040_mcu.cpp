@@ -2,10 +2,6 @@
 /**
  * Support for the RP2040 MCU, as found on the Raspberry Pi Pico.
  */
-
-#include "./rp2040_mcu.h"
-
-
 #if defined(TARGET_RP2040)
 
 
@@ -17,9 +13,9 @@
 #define SIMPLEFOC_DEBUG_RP2040
 
 #include "../../hardware_api.h"
+#include "./rp2040_mcu.h"
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
-#include <pinDefinitions.h>
 
 #define _PWM_FREQUENCY 24000
 #define _PWM_FREQUENCY_MAX 66000
@@ -34,8 +30,7 @@ uint16_t wrapvalues[NUM_PWM_SLICES];
 
 // TODO add checks which channels are already used...
 
-void setupPWM(int pin_nr, long pwm_frequency, bool invert, RP2040DriverParams* params, uint8_t index) {
-	uint pin = (uint)digitalPinToPinName(pin_nr);		// we could check for -DBOARD_HAS_PIN_REMAP ?
+void setupPWM(int pin, long pwm_frequency, bool invert, RP2040DriverParams* params, uint8_t index) {
 	gpio_set_function(pin, GPIO_FUNC_PWM);
 	uint slice = pwm_gpio_to_slice_num(pin);
 	uint chan = pwm_gpio_to_channel(pin);
@@ -50,7 +45,7 @@ void setupPWM(int pin_nr, long pwm_frequency, bool invert, RP2040DriverParams* p
 	uint32_t wrapvalue = (sysclock_hz * 8) / div / pwm_frequency - 1;
 #ifdef SIMPLEFOC_DEBUG_RP2040
 	SimpleFOCDebug::print("Configuring pin ");
-	SimpleFOCDebug::print((int)pin);
+	SimpleFOCDebug::print(pin);
 	SimpleFOCDebug::print(" slice ");
 	SimpleFOCDebug::print((int)slice);
 	SimpleFOCDebug::print(" channel ");

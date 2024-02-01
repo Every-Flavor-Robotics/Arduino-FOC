@@ -56,12 +56,6 @@ struct DQVoltage_s
     float d;
     float q;
 };
-// alpha beta current structure
-struct ABCurrent_s
-{
-    float alpha;
-    float beta;
-};
 
 
 /**

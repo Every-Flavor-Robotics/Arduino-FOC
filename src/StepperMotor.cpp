@@ -16,7 +16,7 @@ StepperMotor::StepperMotor(int pp, float _R, float _KV, float _inductance)
   phase_resistance = _R;
   // save back emf constant KV = 1/K_bemf
   // usually used rms
-  KV_rating = _KV;
+  KV_rating = _KV*_SQRT2;
   // save phase inductance
   phase_inductance = _inductance;
 
@@ -175,8 +175,7 @@ int StepperMotor::alignSensor() {
     }
     // check pole pair number
     float moved =  fabs(mid_angle - end_angle);
-    pp_check_result = !(fabs(moved*pole_pairs - _2PI) > 0.5f);  // 0.5f is arbitrary number it can be lower or higher!
-    if( pp_check_result==false ) {
+    if( fabs(moved*pole_pairs - _2PI) > 0.5f ) { // 0.5f is arbitrary number it can be lower or higher!
       SIMPLEFOC_DEBUG("MOT: PP check: fail - estimated pp: ", _2PI/moved);
     } else {
       SIMPLEFOC_DEBUG("MOT: PP check: OK!");
@@ -293,7 +292,7 @@ void StepperMotor::move(float new_target) {
   if(_isset(new_target) ) target = new_target;
 
   // calculate the back-emf voltage if KV_rating available U_bemf = vel*(1/KV)
-  if (_isset(KV_rating)) voltage_bemf = shaft_velocity/(KV_rating*_SQRT3)/_RPM_TO_RADS;
+  if (_isset(KV_rating)) voltage_bemf = shaft_velocity/KV_rating/_RPM_TO_RADS;
   // estimate the motor current if phase reistance available and current_sense not available
   if(!current_sense && _isset(phase_resistance)) current.q = (voltage.q - voltage_bemf)/phase_resistance;
 

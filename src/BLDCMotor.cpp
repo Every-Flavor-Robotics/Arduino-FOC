@@ -46,7 +46,7 @@ BLDCMotor::BLDCMotor(int pp, float _R, float _KV, float _inductance)
   // 1/sqrt(2) - rms value
   KV_rating = NOT_SET;
   if (_isset(_KV))
-    KV_rating = _KV;
+    KV_rating = _KV*_SQRT2;
   // save phase inductance
   phase_inductance = _inductance;
 
@@ -111,8 +111,6 @@ void BLDCMotor::init() {
 // disable motor driver
 void BLDCMotor::disable()
 {
-  // disable the current sense
-  if(current_sense) current_sense->disable();
   // set zero to PWM
   driver->setPwm(0, 0, 0);
   // disable the driver
@@ -127,13 +125,6 @@ void BLDCMotor::enable()
   driver->enable();
   // set zero to PWM
   driver->setPwm(0, 0, 0);
-  // enable the current sense
-  if(current_sense) current_sense->enable();
-  // reset the pids
-  PID_velocity.reset();
-  P_angle.reset();
-  PID_current_q.reset();
-  PID_current_d.reset();
   // motor status update
   enabled = 1;
 }
@@ -151,6 +142,7 @@ int  BLDCMotor::initFOC() {
   // alignment necessary for encoders!
   // sensor and motor alignment - can be skipped
   // by setting motor.sensor_direction and motor.zero_electric_angle
+  _delay(500);
   if(sensor){
     exit_flag *= alignSensor();
     // added the shaft_angle update
@@ -164,6 +156,7 @@ int  BLDCMotor::initFOC() {
   // aligning the current sensor - can be skipped
   // checks if driver phases are the same as current sense phases
   // and checks the direction of measuremnt.
+  _delay(500);
   if(exit_flag){
     if(current_sense){ 
       if (!current_sense->initialized) {
@@ -257,8 +250,7 @@ int BLDCMotor::alignSensor() {
       sensor_direction = Direction::CW;
     }
     // check pole pair number
-    pp_check_result = !(fabs(moved*pole_pairs - _2PI) > 0.5f); // 0.5f is arbitrary number it can be lower or higher!
-    if( pp_check_result==false ) {
+    if( fabs(moved*pole_pairs - _2PI) > 0.5f ) { // 0.5f is arbitrary number it can be lower or higher!
       SIMPLEFOC_DEBUG("MOT: PP check: fail - estimated pp: ", _2PI/moved);
     } else {
       SIMPLEFOC_DEBUG("MOT: PP check: OK!");
@@ -404,7 +396,7 @@ void BLDCMotor::move(float new_target) {
   if(_isset(new_target)) target = new_target;
   
   // calculate the back-emf voltage if KV_rating available U_bemf = vel*(1/KV)
-  if (_isset(KV_rating)) voltage_bemf = shaft_velocity/(KV_rating*_SQRT3)/_RPM_TO_RADS;
+  if (_isset(KV_rating)) voltage_bemf = shaft_velocity/KV_rating/_RPM_TO_RADS;
   // estimate the motor current if phase reistance available and current_sense not available
   if(!current_sense && _isset(phase_resistance)) current.q = (voltage.q - voltage_bemf)/phase_resistance;
 
