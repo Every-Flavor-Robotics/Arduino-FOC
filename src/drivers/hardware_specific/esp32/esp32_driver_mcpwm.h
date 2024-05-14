@@ -7,9 +7,9 @@
 
 
 
-#pragma message("")
-#pragma message("SimpleFOC: compiling for ESP32 MCPWM driver")
-#pragma message("")
+// #pragma message("")
+// #pragma message("SimpleFOC: compiling for ESP32 MCPWM driver")
+// #pragma message("")
 
 
 #include "driver/mcpwm.h"
